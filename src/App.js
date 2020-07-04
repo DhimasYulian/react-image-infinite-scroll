@@ -1,25 +1,71 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from 'react';
+import Header from './components/Header';
+import Loader from './components/Loader';
+import Images from './components/Images';
+import axios from 'axios';
+import styled from 'styled-components';
+import { createGlobalStyle } from 'styled-components';
+import InfiniteScroll from 'react-infinite-scroll-component'
 
-function App() {
+
+
+const GlobalStyle = createGlobalStyle`
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: sans-serif;
+  }
+`;
+
+const Wrapper = styled.section`
+  max-width: 70rem;
+  margin: 4rem auto;
+  display: grid;
+  grid-gap: 1em;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-auto-rows: 300px;
+`;
+
+const App = () => {
+  const [images, setImages] = useState([]);
+
+  useEffect(() => {
+    fetchImages()
+  }, [])
+
+  const fetchImages = () => {
+    const endpoints = 'https://api.unsplash.com';
+    const key = process.env.REACT_APP_UNSPLASH_ACCESS_KEY;
+
+    axios
+      .get(`${endpoints}/photos/random?client_id=${key}&count=12`)
+      .then(res => setImages([...images, ...res.data]))
+      .catch(err => console.log(err))
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <>
+      <Header />
+      <GlobalStyle />
+      <InfiniteScroll
+        dataLength={images.length}
+        next={fetchImages}
+        hasMore={true}
+        loader={<Loader />}
+      >
+        <Wrapper>
+          {images.map(image => (
+            <>
+              <Images url={image.urls.thumb} key={image.id} />
+            </>
+          ))}
+        </Wrapper>
+      </InfiniteScroll>
+    </>
   );
 }
 
